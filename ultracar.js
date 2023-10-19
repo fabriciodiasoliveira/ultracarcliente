@@ -46,26 +46,6 @@ function login(){
         console.log(error);
     });
 }
-function cadastrarCliente(){
-    nome = document.getElementById("nome");
-    identidade = document.getElementById("identidade");
-    telefone = document.getElementById("telefone");
-    email = document.getElementById("email");
-    endereco = document.getElementById("endereco");
-
-    json = {
-        "nome":nome,
-        "identidade":identidade,
-        "telefone":telefone,
-        "email":email,
-        "endereco":endereco
-    };
-    
-    url = `http://localhost:8080/clientes`;
-
-    axios.post(url, json);
-    getClientes();
-}
 
 function exibirToken(){
     divToken = document.getElementById("token");
@@ -80,25 +60,122 @@ function getClientes(){
     }).then(response => {
         conteudo = document.getElementById("conteudo");
         conteudo.innerHTML = "";
-        conteudo.innerHTML += formularioCliente;
+        
         clientes = response.data;
 
         function imprimirClientes(item) {
-            console.log(item);
             conteudo.innerHTML += "<br>"+item.nome+   `<br><p class="d-inline-flex gap-1">
                                         <button id="button`+item.id+`" class="btn btn-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample`+item.id+`" aria-expanded="false" aria-controls="collapseExample">
                                         Carros do cliente
                                         </button>
                                     </p>
                                     <div class="collapse" id="collapseExample`+item.id+`">
-                                        <div class="card card-body">
-                                            <br>`+item.nome.toString()+`
-                                            <br>`+item.identidade+`
-                                            <br>`+item.endereco+`
+                                        <div id="conteudocliente`+item.id+`" class="card card-body">
+
                                         </div>
                                     </div>`;
+            getCarros(item.id);
         }
         clientes.forEach(imprimirClientes);
+        conteudo.innerHTML += formularioCliente;
+        
     });
+}
+function getCarros(idCliente){
+    axios.get('http://localhost:8080/carros/cliente/'+idCliente)
+    .then(resposta => {
+        carros = resposta.data;
+        conteudoCliente = document.getElementById('conteudocliente'+idCliente);
+            function imprimirCarros(item) {
+                conteudoCliente.innerHTML += `<p class="d-inline-flex gap-1">
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCarro`+item.id+`" aria-expanded="false" aria-controls="collapseExample">
+                  `+item.modelo+`
+                </button>
+              </p>
+              <div class="collapse" id="collapseCarro`+item.id+`">
+                <div id="conteudocarro`+item.id+`" class="card card-body">
+                  
+                </div>
+              </div>`;
+              getNotas(item.id);
+            }
+            carros.forEach(imprimirCarros);
+        });
+}
+function getNotas(idCarro){
+    url = 'http://localhost:8080/servicos/carro/'+idCarro
+    conteudoCarro = document.getElementById(`conteudocarro`+idCarro);
+    
+    axios.get(url)
+    .then(resposta => {
+        notas = resposta.data;
+        console.log(notas);
+        conteudoCliente = document.getElementById('conteudcarro'+idCarro);
+            function imprimirNotas(item) {
+                data = Date(item.data);
+                conteudoCarro.innerHTML ='';
+                conteudoCarro.innerHTML += `<p class="d-inline-flex gap-1">
+                <button class="btn btn-info" type="button" data-bs-toggle="collapse" data-bs-target="#collapsenota`+item.id+`" aria-expanded="false" aria-controls="collapseExample">
+                  `+item.id+`
+                </button>
+              </p>
+              <div class="collapse" id="collapsenota`+item.id+`">
+                <div id="conteudonota`+item.id+`" class="card card-body">
+                    <div>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="exibirNota('`+item.id+`')">
+                        Imprimir
+                    </button>
+                    </div>
+                    `+data+`
+                </div>
+              </div>`;
+            }
+            notas.forEach(imprimirNotas);
+        });
+}
+function exibirNota(idNota){
+    axios.get('http://localhost:8080/servicos/'+idNota)
+    .then(resposta => {
+        nota = resposta.data;
+        conteudoModal = document.getElementById('conteudomodal');
+        axios.get('http://localhost:8080/servicos/carro/'+nota.carro_id)
+            .then(resposta => {
+                carro = resposta.data;
+                
+                conteudoModal.innerHTML += `<table width="100%" style=" 
+                                                                border: 1px solid gray;
+                                                                border-collapse: collapse;
+                                                                ">
+                                        <tr>
+                                            <td>
+                                            <p class="text-start"><b>Relatório de diagnóstico</b></p>
+                                            </td>
+                                            <td>
+                                                <p class="text-end">`+Date()+`</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <br>
+                                    <table width="100%">
+                                        <tr>
+                                            <td>
+                                                Id do diagnóstico: `+nota.id+`
+                                            </td>
+                                            <td>
+                                                Data do diagnóstico: `+nota.data+`
+                                            </td>
+                                        </tr>
+                                        <tr style="background-color:lightgray;">
+                                            <td>
+                                                <b>Dados do cliente</b>
+                                            </td>
+                                            <td>
+                                                <b>Dados do cliente</b>
+                                            </td>
+                                        </tr>
+                                    </table>`;
+            });
+        
+        });
 }
     
